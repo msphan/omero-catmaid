@@ -18,8 +18,7 @@ The url format for rendering image tile:
 https://HOST/omerocatmaid/render_tile/<image_id>/?q=<compression_rate>&
                                                   z=<stack_id>&
                                                   t=<timepoint_id>&
-                                                  x=<x_tile_coord>&y=<y_tile_coord>&w=<tile_width>&h=<tile_height>&
+                                                  x=<x_tile_coord>&y=<y_tile_coord>&
+                                                  w=<tile_width>&h=<tile_height>&
                                                   zm=<zoom_level>
 ```
-
-
