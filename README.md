@@ -27,4 +27,4 @@ E.g.
 https://HOST/omerocatmaid/render_tile/1/?q=70&z=100&t=0&x=500&y=500&w=256&h=256&zm=1
 ```
 Render jpeg image tile at 70% compress quality, 256x256 pixels, zoom out 1/2 of original image size. 
-The zoom image size is calculated by multiplying original size by 2^zm
+The zoom image size is calculated by dividing the original size by 2^zm.
