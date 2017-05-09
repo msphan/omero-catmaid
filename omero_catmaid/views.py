@@ -49,6 +49,8 @@ def index(request):
 @login_required()
 def render_tile(request, iid, conn=None, **kwargs):
     """
+    This function is rewritten based on the render_image_region function in omeroweb.webgateway.
+    
     Returns a jpeg of the OMERO image, rendering only a region specified in
     query string as: 
     z=<stack_id>&t=<timepoint_id>&
