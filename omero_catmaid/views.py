@@ -44,20 +44,16 @@ def index(request):
     """
     Just a place-holder while we get started
     """
-    return HttpResponse("Welcome to our app home-page!!!")
+    return HttpResponse("Welcome to omero-catmaid app home-page!!!")
 
 @login_required()
 def render_tile(request, iid, conn=None, **kwargs):
     """
     Returns a jpeg of the OMERO image, rendering only a region specified in
     query string as: 
-    z=<>&t=<>&region=x,y,width,height&zm=<>&server=<>&bsession=<>
-    
-    z,t: z stack and time point
-    region: specified region on (z,t)
-    zm: zoom level
-    server,bsession: session key authentication
-    
+    z=<stack_id>&t=<timepoint_id>&
+    x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
+       
     Rendering settings can be specified in the request parameters.
 
     @param request:     http request
@@ -66,12 +62,7 @@ def render_tile(request, iid, conn=None, **kwargs):
     @return:            http response wrapping jpeg
     """
     server_id = request.session['connector'].server_id
-    # if the region=x,y,w,h is not parsed correctly to give 4 ints then we
-    # simply provide whole image plane.
-    # alternatively, could return a 404?
-    # if h == None:
-    #    return render_image(request, iid, z, t, server_id=None, _conn=None,
-    #                        **kwargs)
+
     pi = webgateway_views._get_prepared_image(request, iid, server_id=server_id, conn=conn)
 
     if pi is None:
@@ -89,9 +80,7 @@ def render_tile(request, iid, conn=None, **kwargs):
     
     level = None
     
-    # convert to int
-#    z,t = int(float(z)),int(float(t))
-    x,y,w,h = float(x),float(y),int(float(w)),int(float(h)) #TODO float or int => check on CATMAID
+    x,y,w,h = float(x),float(y),int(float(w)),int(float(h))
     zm = float(zm)
     compress_quality = int(compress_quality)
 
@@ -108,7 +97,7 @@ def render_tile(request, iid, conn=None, **kwargs):
             raise Http404
         webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
 
-	# resize to tile width and tile height (w,h)
+	# resize into tile size (w,h)
 	tempBuff = StringIO()
 	tempBuff.write(jpeg_data)
 	tempBuff.seek(0) #need to jump back to the beginning before handing it off to PIL
