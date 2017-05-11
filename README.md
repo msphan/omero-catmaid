@@ -8,7 +8,7 @@ $ export PYTHONPATH=$PYTHONPATH:/path/to/omero-catmaid-folder
 ```
 Add omero-catmaid app to OMERO.web
 ```
-$ OMERO.py/bin/omero config append omero.web.apps '"omero-catmaid"'
+$ OMERO.py/bin/omero config append omero.web.apps '"omero_catmaid"'
 ```
 Restart OMERO.web.
 
