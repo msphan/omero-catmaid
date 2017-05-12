@@ -24,27 +24,27 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from PIL import Image
+	from PIL import Image
 except:  # pragma: nocover
-    try:
-        import Image
-    except:
-        logger.error('No Pillow installed,\
-            line plots and split channel will fail!')
+	try:
+		import Image
+	except:
+		logger.error('No Pillow installed,\
+							line plots and split channel will fail!')
 
 try:
-    import numpy
-    numpyInstalled = True
+	import numpy
+	numpyInstalled = True
 except ImportError:
-    logger.error('No numpy installed')
-    numpyInstalled = False
+	logger.error('No numpy installed')
+	numpyInstalled = False
 
 
 def index(request):
-    """
-    Just a place-holder while we get started
-    """
-    return HttpResponse("Welcome to omero-catmaid app home-page!!!")
+	"""
+	Just a place-holder while we get started
+	"""
+	return HttpResponse("Welcome to omero-catmaid app home-page!!!")
 
 @login_required()
 def render_tile_catmaid(request, iid, conn=None, **kwargs):
@@ -57,7 +57,7 @@ def render_tile_catmaid(request, iid, conn=None, **kwargs):
 	x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
 
 	NOTE: This function is only used to serve Catmaid convention. 
-	   
+	
 	Rendering settings can be specified in the request parameters.
 
 	@param request:     http request
@@ -95,7 +95,7 @@ def render_tile_catmaid(request, iid, conn=None, **kwargs):
 	jpeg_data = webgateway_cache.getImage(request, server_id, img, z, t)
 	if jpeg_data is None:
 		jpeg_data = img.renderJpegRegion(z, t, x, y, w, h, level=level,
-			                             compression=(compress_quality/100.0))
+					                       compression=(compress_quality/100.0))
 		if jpeg_data is None:
 			raise Http404
 		webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
@@ -111,7 +111,7 @@ def render_tile(request, iid, conn=None, **kwargs):
 	query string as: 
 	z=<stack_id>&t=<timepoint_id>&
 	x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
-	   
+		
 	Rendering settings can be specified in the request parameters.
 
 	@param request:     http request
@@ -153,7 +153,7 @@ def render_tile(request, iid, conn=None, **kwargs):
 	jpeg_data = webgateway_cache.getImage(request, server_id, img, z, t)
 	if jpeg_data is None:
 		jpeg_data = img.renderJpegRegion(z, t, scalex, scaley, w, h, level=level,
-			                             compression=(compress_quality/100.0))
+				                          compression=(compress_quality/100.0))
 		if jpeg_data is None:
 			raise Http404
 		webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
