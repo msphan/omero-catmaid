@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.views import generic
 from django.core.urlresolvers import reverse
@@ -71,6 +71,9 @@ def render_tile(request, iid, conn=None, **kwargs):
         raise Http404
     img, compress_quality = pi
 
+    zoomLevelScaling = img.getZoomLevelScaling()
+    max_level = len(zoomLevelScaling.keys()) - 1
+
     # get query parameters
     z = request.GET.get('z', None)
     t = request.GET.get('t', None)
@@ -83,32 +86,15 @@ def render_tile(request, iid, conn=None, **kwargs):
     level = None
     
     x,y,w,h = float(x),float(y),int(float(w)),int(float(h))
-    zm = float(zm)
-    compress_quality = int(compress_quality)
+    zm = int(zm)
+    # compress_quality seems to be None sometimes
+    compress_quality = 90
 
-    # compute scale width and height based on zoom level zm
-    scalew = w * (2**zm)
-    scaleh = h * (2**zm)
-    
-    # region details in request are used as key for caching.
-    jpeg_data = webgateway_cache.getImage(request, server_id, img, z, t)
-    if jpeg_data is None:
-        jpeg_data = img.renderJpegRegion(z, t, x, y, scalew, scaleh, level=level,
-                                         compression=(compress_quality/100.0))
-        if jpeg_data is None:
-            raise Http404
-        webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
+    level = max_level - zm
 
-	# resize into tile size (w,h)
-	tempBuff = StringIO()
-	tempBuff.write(jpeg_data)
-	tempBuff.seek(0) #need to jump back to the beginning before handing it off to PIL
-	im = Image.open(tempBuff)
-	im = im.resize(size=(w,h))
-	
-	# reconvert to string data
-	rv = StringIO()
-	im.save(rv, 'jpeg', quality=compress_quality)
-    
-    rsp = HttpResponse(rv.getvalue(), content_type='image/jpeg')
-    return rsp
+    scalex = x * zoomLevelScaling[zm]
+    scaley = y * zoomLevelScaling[zm]
+
+    jpeg_data = img.renderJpegRegion(z, t, scalex, scaley, w, h, level=level,
+                                     compression=(compress_quality/100.0))
+    return HttpResponse(jpeg_data, content_type='image/jpeg')
