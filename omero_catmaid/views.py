@@ -47,54 +47,115 @@ def index(request):
     return HttpResponse("Welcome to omero-catmaid app home-page!!!")
 
 @login_required()
+def render_tile_catmaid(request, iid, conn=None, **kwargs):
+	"""
+	This function is rewritten based on the render_image_region function in omeroweb.webgateway.
+
+	Returns a jpeg of the OMERO image, rendering only a region specified in
+	query string as: 
+	z=<stack_id>&t=<timepoint_id>&
+	x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
+
+	NOTE: This function is only used to serve Catmaid convention. 
+	   
+	Rendering settings can be specified in the request parameters.
+
+	@param request:     http request
+	@param iid:         image ID
+	@param conn:        L{omero.gateway.BlitzGateway} connection
+	@return:            http response wrapping jpeg
+	"""
+	server_id = request.session['connector'].server_id
+
+	pi = webgateway_views._get_prepared_image(request, iid, server_id=server_id, conn=conn)
+
+	if pi is None:
+		raise Http404
+	img, compress_quality = pi
+
+	zoomLevelScaling = img.getZoomLevelScaling()
+	max_level = len(zoomLevelScaling.keys()) - 1
+
+	# get query parameters
+	z = request.GET.get('z', None)
+	t = request.GET.get('t', None)
+	x = request.GET.get('x', None)
+	y = request.GET.get('y', None)
+	w = request.GET.get('w', None)
+	h = request.GET.get('h', None)
+	zm = request.GET.get('zm', None)
+
+	x,y,w,h = float(x),float(y),int(float(w)),int(float(h))
+	zm = int(zm)
+	compress_quality = int(compress_quality)
+
+	level = max_level - zm
+
+	# region details in request are used as key for caching.
+	jpeg_data = webgateway_cache.getImage(request, server_id, img, z, t)
+	if jpeg_data is None:
+		jpeg_data = img.renderJpegRegion(z, t, x, y, w, h, level=level,
+			                             compression=(compress_quality/100.0))
+		if jpeg_data is None:
+			raise Http404
+		webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
+
+	return HttpResponse(jpeg_data, content_type='image/jpeg')
+
+@login_required()
 def render_tile(request, iid, conn=None, **kwargs):
-    """
-    This function is rewritten based on the render_image_region function in omeroweb.webgateway.
-    
-    Returns a jpeg of the OMERO image, rendering only a region specified in
-    query string as: 
-    z=<stack_id>&t=<timepoint_id>&
-    x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
-       
-    Rendering settings can be specified in the request parameters.
+	"""
+	This function is rewritten based on the render_image_region function in omeroweb.webgateway.
 
-    @param request:     http request
-    @param iid:         image ID
-    @param conn:        L{omero.gateway.BlitzGateway} connection
-    @return:            http response wrapping jpeg
-    """
-    server_id = request.session['connector'].server_id
+	Returns a jpeg of the OMERO image, rendering only a region specified in
+	query string as: 
+	z=<stack_id>&t=<timepoint_id>&
+	x=<x_tile_coord>&y=<y_tile_coor>&w=<tile_width>&h=<tile_height>&zm=<zoom_level>
+	   
+	Rendering settings can be specified in the request parameters.
 
-    pi = webgateway_views._get_prepared_image(request, iid, server_id=server_id, conn=conn)
+	@param request:     http request
+	@param iid:         image ID
+	@param conn:        L{omero.gateway.BlitzGateway} connection
+	@return:            http response wrapping jpeg
+	"""
+	server_id = request.session['connector'].server_id
 
-    if pi is None:
-        raise Http404
-    img, compress_quality = pi
+	pi = webgateway_views._get_prepared_image(request, iid, server_id=server_id, conn=conn)
 
-    zoomLevelScaling = img.getZoomLevelScaling()
-    max_level = len(zoomLevelScaling.keys()) - 1
+	if pi is None:
+		raise Http404
+	img, compress_quality = pi
 
-    # get query parameters
-    z = request.GET.get('z', None)
-    t = request.GET.get('t', None)
-    x = request.GET.get('x', None)
-    y = request.GET.get('y', None)
-    w = request.GET.get('w', None)
-    h = request.GET.get('h', None)
-    zm = request.GET.get('zm', None)
-    
-    level = None
-    
-    x,y,w,h = float(x),float(y),int(float(w)),int(float(h))
-    zm = int(zm)
-    # compress_quality seems to be None sometimes
-    compress_quality = 90
+	zoomLevelScaling = img.getZoomLevelScaling()
+	max_level = len(zoomLevelScaling.keys()) - 1
 
-    level = max_level - zm
+	# get query parameters
+	z = request.GET.get('z', None)
+	t = request.GET.get('t', None)
+	x = request.GET.get('x', None)
+	y = request.GET.get('y', None)
+	w = request.GET.get('w', None)
+	h = request.GET.get('h', None)
+	zm = request.GET.get('zm', None)
 
-    scalex = x * zoomLevelScaling[zm]
-    scaley = y * zoomLevelScaling[zm]
+	x,y,w,h = float(x),float(y),int(float(w)),int(float(h))
+	zm = int(zm)
+	compress_quality = int(compress_quality)
 
-    jpeg_data = img.renderJpegRegion(z, t, scalex, scaley, w, h, level=level,
-                                     compression=(compress_quality/100.0))
-    return HttpResponse(jpeg_data, content_type='image/jpeg')
+	level = max_level - zm
+
+	# compute scale width and height based on zoom level zm
+	scalex = x * zoomLevelScaling[zm]
+	scaley = y * zoomLevelScaling[zm]
+
+	# region details in request are used as key for caching.
+	jpeg_data = webgateway_cache.getImage(request, server_id, img, z, t)
+	if jpeg_data is None:
+		jpeg_data = img.renderJpegRegion(z, t, scalex, scaley, w, h, level=level,
+			                             compression=(compress_quality/100.0))
+		if jpeg_data is None:
+			raise Http404
+		webgateway_cache.setImage(request, server_id, img, z, t, jpeg_data)
+
+	return HttpResponse(jpeg_data, content_type='image/jpeg')

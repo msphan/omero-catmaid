@@ -7,5 +7,8 @@ urlpatterns = patterns('django.views.generic.simple',
 		
 	url(r'^render_tile/(?P<iid>[0-9]+)/$',
     views.render_tile, name="omerocatmaid_render_tile"),
+    
+    url(r'^render_tile_catmaid/(?P<iid>[0-9]+)/$',
+    views.render_tile_catmaid, name="omerocatmaid_render_tile_catmaid"),
 
 )
