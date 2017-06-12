@@ -67,10 +67,9 @@ def render_tile(request, iid, conn=None, **kwargs):
 	@param conn:        L{omero.gateway.BlitzGateway} connection
 	@return:            http response wrapping jpeg
 	"""
-	server_id = request.session['connector'].server_id
 
 	# login get image object
-	pi = webgateway_views._get_prepared_image(request, iid, server_id=server_id, conn=conn)
+	pi = webgateway_views._get_prepared_image(request, iid, conn=conn)
 
 	if pi is None:
 		raise Http404
