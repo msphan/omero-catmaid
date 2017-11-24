@@ -53,7 +53,7 @@ CATMAID.OmeroTileSource = function(baseURL, fileExtension, tileWidth, tileHeight
 };
 ```
 
-then find the tileSources definition in tile-source.js add a new tile source in tileSources list
+then find the tileSources definition in tile-source.js and add a new tile source in tileSources list
 
 ```
 var tileSources = {
