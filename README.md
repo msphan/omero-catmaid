@@ -1,5 +1,5 @@
 # OME-CATMAID
-**Using CATMAID to visualize images stored in OME server.**
+**Using CATMAID to visualize images stored in OMERO server.**
 
 [CATMAID](http://catmaid.readthedocs.io/en/stable/) is a well-known annotation application for large scale bioimages, particularly for neuronal images. CATMAID itself does not host any images. 
 On the other hand, [OMERO](http://www.openmicroscopy.org/omero/) is a full environment for bioimages storage and manangement. It supports various APIs to work with many languages.
